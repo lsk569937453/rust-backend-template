@@ -1,0 +1,7 @@
+[template]
+cargo_generate_version = ">=0.18"
+
+[placeholders.project_name]
+type = "string"
+prompt = "项目名称"
+default = "my_app"
