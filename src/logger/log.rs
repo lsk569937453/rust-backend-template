@@ -1,10 +1,10 @@
 use chrono::Utc;
 use chrono_tz::Asia::Shanghai;
 
+use logroller::{Compression, LogRollerBuilder, Rotation, RotationAge, TimeZone};
 use tracing_appender::non_blocking::NonBlockingBuilder;
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_appender::rolling::RollingFileAppender;
-use tracing_appender::rolling::Rotation;
+
 use tracing_subscriber::fmt::time::FormatTime;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -18,13 +18,11 @@ impl FormatTime for ShanghaiTime {
     }
 }
 pub fn setup_logger() -> Result<WorkerGuard, anyhow::Error> {
-    let file_appender = RollingFileAppender::builder()
-                .rotation(Rotation::DAILY) // rotate log files once every hour
-                .max_log_files(10)
-                .filename_prefix("{{project_name}}") // log file names will be prefixed with `myapp.`
-                .filename_suffix("log") // log file names will be suffixed with `.log`
-                .build("./logs") // try to build an appender that stores log files in `/var/log`
-    ?;
+    let file_appender = LogRollerBuilder::new("./logs", "{{project_name}}.log")
+        .rotation(Rotation::AgeBased(RotationAge::Daily)) // Rotate daily
+        .max_keep_files(7) // Keep a week's worth of logs
+        .time_zone(TimeZone::Local) // Use local timezone
+        .build()?;
     let (non_blocking_writer, guard) = NonBlockingBuilder::default()
         .buffered_lines_limit(10 * 1000 * 1000)
         .finish(file_appender);
