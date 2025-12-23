@@ -1,6 +1,5 @@
 use clap::Parser;
 
-/// SGS 后端服务器
 #[derive(Debug, Parser)]
 #[command(name = "{{project_name}}")]
 #[command(about = "Backend Server")]
