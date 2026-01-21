@@ -1,0 +1,77 @@
+name: "build"
+
+on:
+    push:
+        tags:
+            - "*"
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+    build:
+        env:
+            RUSTFLAGS: "--cfg hyper_unstable_tracing"
+        strategy:
+            matrix:
+                platform:
+                    - release_for: linux-x86_64
+                      os: ubuntu-24.04
+                      target: x86_64-unknown-linux-musl
+                      bin: {{project_name}}
+                      name: {{project_name}}-linux-x86_64
+
+                    - release_for: windows-x86_64
+                      os: windows-latest
+                      target: x86_64-pc-windows-msvc
+                      bin: {{project_name}}.exe
+                      name: {{project_name}}-windows-x86_64.exe
+
+                    - release_for: macos-x86_64
+                      os: macOS-latest
+                      target: x86_64-apple-darwin
+                      bin: {{project_name}}
+                      name: {{project_name}}-macos-x86_64
+
+                    - release_for: macos-arm64
+                      os: macOS-latest
+                      target: aarch64-apple-darwin
+                      bin: {{project_name}}
+                      name: {{project_name}}-macos-arm64
+
+        runs-on: ${{ matrix.platform.os }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Build binary
+              uses: houseabsolute/actions-rust-cross@v0
+              with:
+                  command: build
+                  target: ${{ matrix.platform.target }}
+                  args: "--release"
+                  strip: true
+
+            - name: Login to GitHub Container Registry
+              if: matrix.platform.target == 'x86_64-unknown-linux-musl'
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push Docker image
+              if: matrix.platform.target == 'x86_64-unknown-linux-musl'
+              run: |
+                  cp target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} ./docker/{{project_name}}
+                  cd docker/
+                  docker build -t ghcr.io/lsk569937453/{{project_name}}:${{ github.ref_name }} .
+                  docker build -t ghcr.io/lsk569937453/{{project_name}}:latest .
+                  docker push ghcr.io/lsk569937453/{{project_name}}:${{ github.ref_name }}
+                  docker push ghcr.io/lsk569937453/{{project_name}}:latest
+
+            - name: Upload binaries to release
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }}
