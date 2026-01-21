@@ -18,13 +18,15 @@ impl FormatTime for ShanghaiTime {
     }
 }
 pub fn setup_logger() -> Result<WorkerGuard, anyhow::Error> {
-    let file_appender = LogRollerBuilder::new("./logs", "{{project_name}}.log")
+    let file_appender = LogRollerBuilder::new("./logs", "{{project_name}}")
+        .suffix("log".to_string())
         .rotation(Rotation::AgeBased(RotationAge::Daily)) // Rotate daily
         .max_keep_files(7) // Keep a week's worth of logs
         .time_zone(TimeZone::Local) // Use local timezone
         .build()?;
     let (non_blocking_writer, guard) = NonBlockingBuilder::default()
-        .buffered_lines_limit(10 * 1000 * 1000)
+        .buffered_lines_limit(128 * 1000)
+        .lossy(false)
         .finish(file_appender);
 
     let file_layer = tracing_subscriber::fmt::Layer::new()
