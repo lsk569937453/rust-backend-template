@@ -11,6 +11,7 @@ use axum::routing::any;
 use clap::Parser;
 use tower_http::cors::Any;
 use tower_http::cors::CorsLayer;
+use std::net::SocketAddr;
 
 pub async fn main_with_error() -> Result<(), anyhow::Error> {
     let logger = setup_logger()?;
@@ -40,7 +41,11 @@ pub async fn main_with_error() -> Result<(), anyhow::Error> {
     info!("Server listening on http://{}", addr);
     println!("Server listening on http://{}", addr);
 
-    axum::serve(listener, app).await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }
