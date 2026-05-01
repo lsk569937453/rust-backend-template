@@ -4,3 +4,4 @@ logs
 .claude
 data
 .aider*
+{{project_name}}
