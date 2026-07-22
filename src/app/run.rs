@@ -3,6 +3,7 @@ use crate::config::cli::Cli;
 use crate::handler::echo_handler::echo;
 use crate::logger::log::setup_logger;
 use crate::middleware::log::log_requests;
+use crate::middleware::trace_id::trace_id_middleware;
 
 use crate::vojo::app_state::AppState;
 use axum::Router;
@@ -32,6 +33,7 @@ pub async fn main_with_error() -> Result<(), anyhow::Error> {
     let app = Router::new()
         .route("/echo", any(echo))
         .layer(axum_middleware::from_fn(log_requests))
+        .layer(axum_middleware::from_fn(trace_id_middleware))
         .with_state(app_state)
         .layer(cors); // <-- 3. Apply the CORS layer to your entire application
 
