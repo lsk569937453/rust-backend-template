@@ -1,0 +1,31 @@
+# clippy.toml 项目级Clippy规则配置
+# 规则级别：D=deny(编译报错)、W=warn(警告)、A=allow(完全忽略)
+
+# 全局统一关闭类型复杂度提示
+type_complexity = "allow"
+
+# ====================== 生产代码（非test）强制禁止 ======================
+[[lint.allow]]
+condition = "cfg(test)"
+lint = "expect_used"
+
+[[lint.allow]]
+condition = "cfg(test)"
+lint = "unwrap_used"
+
+[[lint.allow]]
+condition = "cfg(test)"
+lint = "panic"
+
+# 非测试环境 deny 拦截
+[[lint.deny]]
+condition = "not(cfg(test))"
+lint = "expect_used"
+
+[[lint.deny]]
+condition = "not(cfg(test))"
+lint = "unwrap_used"
+
+[[lint.deny]]
+condition = "not(cfg(test))"
+lint = "panic"
