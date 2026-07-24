@@ -75,3 +75,10 @@ uuid = { version = "=1.19.0", features = ["v4", "v7"] }
 validator = "=0.20.0"
 validator_derive = "=0.20.0"
 walkdir = "=2.5.0"
+
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+type_complexity = "allow"
